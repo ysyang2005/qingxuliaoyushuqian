@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>別再評判自己了 - 思維轉換</title>
+    <style>
+        /* --- 0. 基礎設定 & 變量 --- */
+        :root {
+            --color-panic-bg: #e15f41;
+            --color-input-bg: #f3f0e9;
+            --color-calm-bg: #e0f2f1;
+            --color-calm-accent: #26a69a;
+            --color-text-main: #2d3436;
+            --color-text-sub: #636e72;
+            --color-warm-bg: #fffbe8; /* 新增：金句溫暖背景色 */
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: var(--color-input-bg);
+            transition: background-color 1.5s ease;
+        }
+
+        /* --- State A: Trigger (略) --- */
+        #state-trigger {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--color-panic-bg); z-index: 999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; transition: opacity 0.8s ease;
+        }
+
+        #state-trigger.hidden { opacity: 0; pointer-events: none; }
+        .stop-icon { font-size: 80px; margin-bottom: 20px; animation: pulse 1.5s infinite; }
+        .trigger-text { font-size: 1.5em; font-weight: 800; letter-spacing: 2px; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* --- 3D 場景 (略) --- */
+        .scene {
+                    /* 💡 寬度修正：最大寬度從 380px 縮小到 340px */
+                    width: 88%; max-width: 380px; 
+                    /* 💡 高度修正：從 620px 縮小到 580px */
+                    height: 550px; 
+                    perspective: 1200px; opacity: 0; transform: translateY(30px);
+                    transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+                }                       
+        .scene.visible { opacity: 1; transform: translateY(0); }
+
+        .card {
+            width: 100%; height: 100%; position: relative;
+            transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .card.is-flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 32px; background: #ffffff;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            /* 💡 修正：增加頂部內邊距 (例如從 35px 增加到 60px) */
+            padding: 80px 25px 35px 25px;
+            display: flex; flex-direction: column;
+            align-items: center; text-align: center;
+        }
+
+        /* State B UI (略) */
+        .card-front h2 { margin-top: 20px; color: var(--color-text-main); font-size: 1.6em; }
+        .hint { color: var(--color-text-sub); margin-bottom: 30px; }
+        .voice-btn {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            border: none; color: white; font-size: 36px;
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4);
+            transition: transform 0.2s; margin-bottom: 15px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .voice-btn:active { transform: scale(0.9); }
+        .voice-btn.listening { animation: ripple 1.5s infinite; background: #ff7675; }
+        @keyframes ripple { 0% { box-shadow: 0 0 0 0 rgba(255,118,117,0.7); } 100% { box-shadow: 0 0 0 25px rgba(255,118,117,0); } }
+        .text-input {
+            width: 100%; border: none; border-bottom: 2px solid #eee;
+            padding: 15px; font-size: 16px; text-align: center; outline: none;
+            transition: border 0.3s; color: #2d3436; margin-bottom: auto;
+        }
+        .text-input:focus { border-color: #6c5ce7; }
+        .btn-release {
+            width: 100%; padding: 18px; border-radius: 50px; border: none;
+            background: #2d3436; color: white; font-weight: 700; font-size: 16px;
+            opacity: 0.3; pointer-events: none; transition: all 0.3s;
+        }
+        .btn-release.active { opacity: 1; pointer-events: auto; transform: translateY(-2px); }
+
+        /* --- State C UI (背面) --- */
+        .card-back { transform: rotateY(180deg); justify-content: flex-start; }
+        
+        .ai-header { display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
+        .ai-avatar-small { font-size: 24px; margin-right: 10px; }
+        .ai-title { 
+            font-weight: bold; 
+            color: var(--color-calm-accent); 
+            /* 💡 修正：增大字體大小 */
+            font-size: 1.8em; 
+            letter-spacing: 1px; 
+            text-transform: uppercase; 
+        }
+        
+        .reframing-card {
+            background: #f4fcfb; border-left: 4px solid var(--color-calm-accent);
+            padding: 20px; border-radius: 12px; text-align: left; line-height: 1.6;
+            color: #444; font-size: 0.95em; margin-bottom: 20px; width: 100%;
+        }
+        
+        /* ✨ 新增：每日金句區塊樣式 ✨ */
+        .daily-quote-box {
+            width: 100%;
+            background: var(--color-warm-bg); /* 溫暖的淺黃色/米白色 */
+            border-radius: 12px;
+            padding: 15px;
+            text-align: left;
+            color: var(--color-text-main);
+            font-style: italic;
+            font-size: 0.9em;
+            line-height: 1.4;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+        /* 💡 修正區域：金句標題樣式增強 */
+        .quote-header {
+            font-weight: 900; /* 提高字重，更粗 */
+            color: #ff9800; /* 提高顏色飽和度，更亮眼的橘金色 */
+            font-size: 1.1em; /* 略微放大 */
+            margin-bottom: 5px;
+            font-style: normal;
+        }
+
+        /* 播放器樣式 (略) */
+        .meditation-capsule {
+            width: 100%; background: #ffffff; border-radius: 24px;
+            padding: 8px 8px 8px 20px; display: flex; align-items: center;
+            justify-content: space-between; box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.03); margin-bottom: auto;
+            position: relative; overflow: hidden; transition: transform 0.2s;
+        }
+        .meditation-capsule.playing .play-btn-circle {
+            background: #ff7675; box-shadow: 0 0 0 6px rgba(255, 118, 117, 0.2); animation: glow 2s infinite;
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 0 4px rgba(255, 118, 117, 0.2); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 118, 117, 0.1); }
+            100% { box-shadow: 0 0 0 4px rgba(255, 118, 117, 0.2); }
+        }
+        .play-btn-circle {
+            width: 48px; height: 48px; border-radius: 50%; background: var(--color-calm-accent);
+            color: white; border: none; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 10px rgba(38, 166, 154, 0.4); z-index: 2; transition: all 0.3s;
+        }
+        .play-btn-circle svg { width: 16px; height: 16px; fill: white; margin-left: 2px; transition: margin 0.2s;}
+        
+        .visualizer { position: absolute; right: 70px; height: 20px; display: flex; align-items: center; gap: 3px; opacity: 0; transition: opacity 0.3s; }
+        .meditation-capsule.playing .visualizer { opacity: 1; }
+        .bar { width: 3px; background: var(--color-calm-accent); border-radius: 2px; animation: bounce 1s infinite ease-in-out; }
+        .bar:nth-child(1) { height: 10px; animation-delay: 0.1s; }
+        .bar:nth-child(2) { height: 18px; animation-delay: 0.2s; }
+        .bar:nth-child(3) { height: 14px; animation-delay: 0.3s; }
+        .bar:nth-child(4) { height: 8px; animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 100% { height: 6px; opacity: 0.5; } 50% { height: 20px; opacity: 1; } }
+
+        .btn-ok {
+            width: 100%; padding: 18px; border-radius: 50px;
+            background: transparent; color: var(--color-calm-accent);
+            border: 2px solid var(--color-calm-accent); font-weight: 700;
+            font-size: 1.15em;
+            transition: background 0.2s; margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="state-trigger">
+        <div class="stop-icon">🛑</div>
+        <div class="trigger-text">捕捉到一個念頭！</div>
+        <p style="margin-top:10px; opacity:0.8; font-size:0.9em;">深呼吸...</p>
+    </div>
+
+    <div class="scene" id="main-scene">
+        <div class="card" id="flip-card">
+            
+            <div class="card-face card-front">
+                <h2>別評判自己</h2>
+                <p class="hint">剛才腦海裡出現了什麼聲音？</p>
+
+                <button class="voice-btn" id="btn-voice">🎤</button>
+                <div style="font-size:12px; color:#b2bec3; margin-bottom:20px;">點擊錄音</div>
+
+                <input type="text" class="text-input" id="input-text" placeholder="或者簡單寫下來...">
+                
+                <button class="btn-release" id="btn-release">釋放它 (Release)</button>
+            </div>
+
+            <div class="card-face card-back">
+                <div class="ai-header">
+                    <span class="ai-avatar-small">✨</span>
+                    <span class="ai-title">沒事的</span>
+                </div>
+                
+                <div class="reframing-card">
+                    <span id="ai-advice">你不是搞砸了，你只是在學習。這個錯誤並不定義你，它只是成長的一個數據點。</span>
+                </div>
+
+                <div class="daily-quote-box">
+                    <div class="quote-header">今日心靈雞湯 ☀️</div>
+                    <div id="daily-content"></div>
+                </div>
+
+                <div class="meditation-capsule" id="meditation-trigger">
+                    <div class="meditation-info">
+                        <span class="meditation-title">5分鐘靜心</span>
+                        <span class="meditation-desc">平復剛才的情緒波動</span>
+                    </div>
+                    
+                    <div class="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+
+                    <button class="play-btn-circle" id="play-btn">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    
+                    <audio id="audio-file" src="https://actions.google.com/sounds/v1/water/waves_crashing.ogg"></audio>
+                </div>
+
+                <button class="btn-ok" onclick="closeApp()">我感覺好多了</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const stateTrigger = document.getElementById('state-trigger');
+        const mainScene = document.getElementById('main-scene');
+        const flipCard = document.getElementById('flip-card');
+        const btnVoice = document.getElementById('btn-voice');
+        const inputText = document.getElementById('input-text');
+        const btnRelease = document.getElementById('btn-release');
+        const meditationCapsule = document.getElementById('meditation-trigger');
+        const playBtn = document.getElementById('play-btn');
+        const audioFile = document.getElementById('audio-file');
+        const dailyContentElement = document.getElementById('daily-content'); 
+
+        // SVG Icons
+        const iconPlay = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+        const iconPause = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+
+        // ✨ 心理學金句庫 (State C) ✨
+        const dailyQuotes = [
+            "小練習：給自己寫一封感謝信，感謝自己今天所做的努力。",
+            "金句：你所批評自己的那些點，或許正是你最獨特的地方。",
+            "正面故事：連貫的善良，比偶爾的完美更有力量。",
+            "小練習：找一個舒服的姿勢，進行 1 分鐘的自我接納冥想。",
+            "金句：情緒像天氣，它會來也會走。你不是情緒，你是觀察者。",
+            "正面故事：每朵花都有自己的花期，無需與他人的進度比較。",
+        ];
+
+        // 隨機抽取金句函數
+        function loadDailyContent() {
+            const randomIndex = Math.floor(Math.random() * dailyQuotes.length);
+            dailyContentElement.textContent = dailyQuotes[randomIndex];
+        }
+
+        // 1. Init: Wait 3 seconds
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                stateTrigger.classList.add('hidden');
+                mainScene.classList.add('visible');
+                setTimeout(() => stateTrigger.style.display = 'none', 800);
+            }, 3000); 
+        });
+
+        // 2. Input Logic (略)
+        inputText.addEventListener('input', () => {
+            if (inputText.value.length > 0) btnRelease.classList.add('active');
+            else btnRelease.classList.remove('active');
+        });
+        btnVoice.addEventListener('click', () => {
+            btnVoice.classList.toggle('listening');
+            if (btnVoice.classList.contains('listening')) {
+                inputText.placeholder = "正在聆聽...";
+                setTimeout(() => {
+                    btnVoice.classList.remove('listening');
+                    inputText.value = "我覺得自己做得很差勁..."; 
+                    btnRelease.classList.add('active');
+                }, 2000);
+            }
+        });
+
+        // 3. Flip & Color Shift
+        btnRelease.addEventListener('click', () => {
+            flipCard.classList.add('is-flipped');
+            document.body.style.backgroundColor = "var(--color-calm-bg)";
+            loadDailyContent(); // ✨ 關鍵：卡片翻轉後載入每日金句
+        });
+
+        // 4. Player Logic (略)
+        meditationCapsule.addEventListener('click', () => {
+            const isPlaying = !audioFile.paused;
+            if (isPlaying) {
+                audioFile.pause();
+                meditationCapsule.classList.remove('playing');
+                playBtn.innerHTML = iconPlay;
+            } else {
+                audioFile.play();
+                meditationCapsule.classList.add('playing');
+                playBtn.innerHTML = iconPause;
+            }
+        });
+        audioFile.addEventListener('ended', () => {
+            meditationCapsule.classList.remove('playing');
+            playBtn.innerHTML = iconPlay;
+        });
+
+        // 5. Close App
+        function closeApp() {
+            audioFile.pause();
+            alert("✨ 願你今天對自己溫柔以待");
+            location.reload();
+        }
+    </script>
+</body>
+</html>
